@@ -1,7 +1,11 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # ============================================================
-#  SURUJ IP CHANGER INSTALLER v5.1
+#  SURUJ IP CHANGER INSTALLER v5.1 - FULL CONTROL
+# ============================================================
+
+# ============================================================
+#  SURUJ LOGO BANNER
 # ============================================================
 clear
 echo -e "\033[1;36m"
@@ -26,7 +30,9 @@ echo -e "\033[0m"
 
 echo -e "\033[1;36m🔍 Installing SURUJ IP Changer...\033[0m"
 
-# Termux check
+# ============================================================
+#  TERMUX ENVIRONMENT CHECK
+# ============================================================
 if [ -d "/data/data/com.termux/files/usr" ]; then
     PREFIX="/data/data/com.termux/files/usr"
     IPCHANGER="$PREFIX/share/ip-changer"
@@ -39,20 +45,38 @@ else
     PKG_MANAGER="apt-get"
 fi
 
-# Remove old files
-rm -rf /data/data/com.termux/files/usr/share/AnonymousPro
-rm -f /data/data/com.termux/files/usr/bin/AnonymousPro
-pkill -f AnonymousPro 2>/dev/null
+echo -e "\033[1;36m📁 Installation path: $IPCHANGER\033[0m"
+echo -e "\033[1;36m📁 Launcher path: $LAUNCHER\033[0m"
 
-# Install packages
+# ============================================================
+#  REMOVE OLD FILES & PROCESSES
+# ============================================================
+echo -e "\033[1;33m🔄 Removing old files and processes...\033[0m"
+pkill -f AnonymousPro 2>/dev/null
+pkill -f multitor 2>/dev/null
+pkill -f privoxy 2>/dev/null
+pkill -f ip-changer 2>/dev/null
+
+rm -rf /data/data/com.termux/files/usr/share/AnonymousPro 2>/dev/null
+rm -rf /data/data/com.termux/files/usr/share/ip-changer 2>/dev/null
+rm -f /data/data/com.termux/files/usr/bin/ip-changer 2>/dev/null
+rm -f /data/data/com.termux/files/usr/bin/AnonymousPro 2>/dev/null
+rm -f ~/.ip_changer_config.json 2>/dev/null
+
+echo -e "\033[1;32m✅ Old files removed!\033[0m"
+
+# ============================================================
+#  INSTALL PACKAGES
+# ============================================================
 echo -e "\033[1;36m🛠️ Installing required packages...\033[0m"
 $PKG_MANAGER install tor curl netcat-openbsd jq -y 2>/dev/null
 
-# Create directory
+# ============================================================
+#  CREATE DIRECTORY & MAIN SCRIPT
+# ============================================================
 mkdir -p "$IPCHANGER"
 cd "$IPCHANGER"
 
-# Create main script
 cat > "$IPCHANGER/ip-changer.sh" << 'MAINEOF'
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -177,21 +201,15 @@ show_banner() {
     clear
     echo -e "${PURPLE}"
     echo '    ╔══════════════════════════════════════════════════════════════╗'
-    echo '    ║                                                              ║'
     echo '    ║        ███████╗██╗   ██╗██████╗ ██╗   ██╗██╗              ║'
     echo '    ║        ██╔════╝██║   ██║██╔══██╗██║   ██║██║              ║'
     echo '    ║        ███████╗██║   ██║██████╔╝██║   ██║██║              ║'
     echo '    ║        ╚════██║██║   ██║██╔══██╗██║   ██║██║              ║'
     echo '    ║        ███████║╚██████╔╝██║  ██║╚██████╔╝███████╗         ║'
     echo '    ║        ╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝         ║'
-    echo '    ║                                                              ║'
     echo '    ║              🔄 IP CHANGER PRO v5.1                         ║'
     echo '    ║                   SURUJ EDITION                             ║'
-    echo '    ║                                                              ║'
-    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
     echo '    ║                 🦅  EAGLE EYE  🦅                           ║'
-    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
-    echo '    ║                                                              ║'
     echo '    ╚══════════════════════════════════════════════════════════════╝'
     echo -e "${NC}"
 }
@@ -344,7 +362,44 @@ MAINEOF
 
 chmod +x "$IPCHANGER/ip-changer.sh"
 
-# Create launcher
+# ============================================================
+#  CREATE LOCK SCRIPT
+# ============================================================
+cat > "$IPCHANGER/ip-changer.lock" << 'LOCKEOF'
+#!/data/data/com.termux/files/usr/bin/bash
+
+REAL_PASS="SURUJ@2026"
+MAX_ATTEMPTS=3
+
+attempt=0
+while [ $attempt -lt $MAX_ATTEMPTS ]; do
+    echo -e "\033[1;36m🔐 Enter password to unlock IP Changer:\033[0m"
+    read -s user_pass
+    echo ""
+    
+    if [ "$user_pass" == "$REAL_PASS" ]; then
+        echo -e "\033[1;32m✅ Access granted! Loading IP Changer...\033[0m"
+        break
+    else
+        attempt=$((attempt + 1))
+        left=$((MAX_ATTEMPTS - attempt))
+        echo -e "\033[1;31m❌ Wrong password! $left attempts left.\033[0m"
+    fi
+done
+
+if [ $attempt -ge $MAX_ATTEMPTS ]; then
+    echo -e "\033[1;31m🔒 Too many failed attempts! Exiting...\033[0m"
+    exit 1
+fi
+
+bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
+LOCKEOF
+
+chmod +x "$IPCHANGER/ip-changer.lock"
+
+# ============================================================
+#  CREATE LAUNCHER
+# ============================================================
 cat > "$LAUNCHER" << 'LAUNCHEREOF'
 #!/data/data/com.termux/files/usr/bin/bash
 bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
@@ -352,10 +407,23 @@ LAUNCHEREOF
 
 chmod +x "$LAUNCHER"
 
-# Start Tor
+# ============================================================
+#  START TOR
+# ============================================================
+echo -e "\033[1;36m🚀 Starting Tor...\033[0m"
 tor --runasdaemon 1 2>/dev/null
 sleep 3
 
+# ============================================================
+#  FINAL MESSAGE
+# ============================================================
+echo -e "\033[1;32m==========================================\033[0m"
 echo -e "\033[1;32m✅ SURUJ IP CHANGER PRO v5.1 INSTALLED!\033[0m"
-echo -e "\033[1;36m🚀 Now run: ip-changer\033[0m"
+echo -e "\033[1;32m==========================================\033[0m"
+echo -e "\033[1;36m🚀 Now run: \033[1;32mip-changer\033[0m"
 echo -e "\033[1;36m📂 Installed at: $IPCHANGER\033[0m"
+echo -e "\033[1;36m🔑 Password (if lock enabled): \033[1;33mSURUJ@2026\033[0m"
+echo -e "\033[1;32m==========================================\033[0m"
+echo -e "\033[1;36m📌 All settings are saved automatically!\033[0m"
+echo -e "\033[1;36m📌 To change interval: Run \033[1;33mip-changer\033[0m \033[1;36m→ [1] Set Interval\033[0m"
+echo -e "\033[1;32m==========================================\033[0m"
