@@ -1,22 +1,17 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# ============================================================
-#  SURUJ IP CHANGER - LOCK & ENCRYPT SYSTEM
-# ============================================================
-
 PASSWORD="SURUJ@2026"
-MAX_ATTEMPTS=3
 
 MAIN_SCRIPT="/data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh"
 LOCKED_SCRIPT="/data/data/com.termux/files/usr/share/ip-changer/ip-changer.lock"
 LAUNCHER="/data/data/com.termux/files/usr/bin/ip-changer"
 
 if [ ! -f "$MAIN_SCRIPT" ]; then
-    echo -e "\033[1;31m❌ Main script not found! Install IP Changer first.\033[0m"
+    echo -e "\033[1;31m❌ Main script not found!\033[0m"
     exit 1
 fi
 
-echo -e "\033[1;36m🔒 Creating encrypted lock system...\033[0m"
+echo -e "\033[1;36m🔒 Creating lock system...\033[0m"
 
 cat > "$LOCKED_SCRIPT" << 'LOCKEOF'
 #!/data/data/com.termux/files/usr/bin/bash
@@ -45,8 +40,7 @@ if [ $attempt -ge $MAX_ATTEMPTS ]; then
     exit 1
 fi
 
-cd /data/data/com.termux/files/usr/share/ip-changer
-bash ip-changer.sh "$@"
+bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
 LOCKEOF
 
 chmod +x "$LOCKED_SCRIPT"
@@ -58,7 +52,5 @@ LAUNCHEREOF
 
 chmod +x "$LAUNCHER"
 
-echo -e "\033[1;32m✅ Lock system created successfully!\033[0m"
+echo -e "\033[1;32m✅ Lock system created!\033[0m"
 echo -e "\033[1;36m🔑 Password: SURUJ@2026\033[0m"
-echo -e "\033[1;36m📌 To run: ip-changer\033[0m"
-echo -e "\033[1;33m⚠️ Keep your password safe!\033[0m"
