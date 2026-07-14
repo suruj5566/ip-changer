@@ -4,7 +4,12 @@
 #  SURUJ IP CHANGER PRO v5.1 - FULL CONTROL
 # ============================================================
 
-RED='\033[1;31m'; GREEN='\033[1;32m'; YELLOW='\033[1;33m'; CYAN='\033[1;36m'; PURPLE='\033[1;35m'; NC='\033[0m'
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[1;36m'
+PURPLE='\033[1;35m'
+NC='\033[0m'
 
 CONFIG_FILE="$HOME/.ip_changer_config.json"
 DEFAULT_INTERVAL=30
@@ -13,7 +18,7 @@ DEFAULT_AUTO_START="false"
 DEFAULT_BG_MODE="false"
 
 # ============================================================
-#  100+ COUNTRIES
+#  ১০০+ COUNTRIES
 # ============================================================
 declare -A COUNTRIES=(
     ["random"]="🌍 Random"
