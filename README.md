@@ -1,14 +1,19 @@
-# 🔄 SURUJ IP Changer v4.1
+# 🔄 SURUJ IP Changer v5.1
 
 ## 🦅 EAGLE EYE EDITION
 
+**Developer:** SURUJ
+
 ### 📌 Features
-- 100+ Countries
-- Auto-detect Tor Exit Nodes
-- Custom Interval
-- Manual Renew
-- Auto-Restart (tmux)
-- Password Lock System
+- ✅ Set Custom Interval
+- ✅ 100+ Countries
+- ✅ Set Country
+- ✅ Auto-Start
+- ✅ Background Mode
+- ✅ Manual Renew
+- ✅ Show History
+- ✅ Password Lock
+- ✅ SURUJ Logo Banner
 
 ### 🚀 Installation
 ```bash
