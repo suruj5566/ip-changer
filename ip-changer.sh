@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # ============================================================
-#  SURUJ IP CHANGER PRO v5.1 - FULL CONTROL
+#  SURUJ IP CHANGER PRO v5.2 - WITH PROXY SUPPORT
 # ============================================================
 
 RED='\033[1;31m'
@@ -16,6 +16,7 @@ DEFAULT_INTERVAL=30
 DEFAULT_COUNTRY="random"
 DEFAULT_AUTO_START="false"
 DEFAULT_BG_MODE="false"
+DEFAULT_PROXY_MODE="tor"  # tor or privoxy
 
 # ============================================================
 #  ১০০+ COUNTRIES
@@ -91,25 +92,37 @@ load_config() {
         COUNTRY=$(jq -r '.country' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_COUNTRY")
         AUTO_START=$(jq -r '.auto_start' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_AUTO_START")
         BG_MODE=$(jq -r '.bg_mode' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_BG_MODE")
+        PROXY_MODE=$(jq -r '.proxy_mode' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_PROXY_MODE")
     else
         INTERVAL=$DEFAULT_INTERVAL
         COUNTRY=$DEFAULT_COUNTRY
         AUTO_START=$DEFAULT_AUTO_START
         BG_MODE=$DEFAULT_BG_MODE
+        PROXY_MODE=$DEFAULT_PROXY_MODE
     fi
 }
 
 save_config() {
-    echo "{\"interval\": $INTERVAL, \"country\": \"$COUNTRY\", \"auto_start\": $AUTO_START, \"bg_mode\": $BG_MODE}" > "$CONFIG_FILE"
+    echo "{\"interval\": $INTERVAL, \"country\": \"$COUNTRY\", \"auto_start\": $AUTO_START, \"bg_mode\": $BG_MODE, \"proxy_mode\": \"$PROXY_MODE\"}" > "$CONFIG_FILE"
 }
 
 get_current_ip() {
-    curl -s --socks5-hostname 127.0.0.1:9050 https://api.ipify.org 2>/dev/null
+    if [ "$PROXY_MODE" = "privoxy" ]; then
+        curl -s --proxy 127.0.0.1:8118 https://api.ipify.org 2>/dev/null
+    else
+        curl -s --socks5-hostname 127.0.0.1:9050 https://api.ipify.org 2>/dev/null
+    fi
 }
 
 change_ip() {
     echo -e "${YELLOW}🔄 Changing IP...${NC}"
-    echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
+    if [ "$PROXY_MODE" = "privoxy" ]; then
+        # Privoxy + Tor
+        echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
+    else
+        # Direct Tor
+        echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
+    fi
     sleep 2
     NEW_IP=$(get_current_ip)
     if [ -n "$NEW_IP" ]; then
@@ -126,21 +139,16 @@ show_banner() {
     clear
     echo -e "${PURPLE}"
     echo '    ╔══════════════════════════════════════════════════════════════╗'
-    echo '    ║                                                              ║'
     echo '    ║        ███████╗██╗   ██╗██████╗ ██╗   ██╗██╗              ║'
     echo '    ║        ██╔════╝██║   ██║██╔══██╗██║   ██║██║              ║'
     echo '    ║        ███████╗██║   ██║██████╔╝██║   ██║██║              ║'
     echo '    ║        ╚════██║██║   ██║██╔══██╗██║   ██║██║              ║'
     echo '    ║        ███████║╚██████╔╝██║  ██║╚██████╔╝███████╗         ║'
     echo '    ║        ╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝         ║'
-    echo '    ║                                                              ║'
-    echo '    ║              🔄 IP CHANGER PRO v5.1                         ║'
+    echo '    ║              🔄 IP CHANGER PRO v5.2                         ║'
     echo '    ║                   SURUJ EDITION                             ║'
-    echo '    ║                                                              ║'
-    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
     echo '    ║                 🦅  EAGLE EYE  🦅                           ║'
-    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
-    echo '    ║                                                              ║'
+    echo '    ║              PROXY: 127.0.0.1 PORT 8118 (Privoxy)          ║'
     echo '    ╚══════════════════════════════════════════════════════════════╝'
     echo -e "${NC}"
 }
@@ -153,6 +161,7 @@ show_menu() {
     echo -e "${CYAN}🌍 Country: ${GREEN}${COUNTRIES[$COUNTRY]:-$COUNTRY}${NC}"
     echo -e "${CYAN}🚀 Auto-Start: ${GREEN}${AUTO_START}${NC}"
     echo -e "${CYAN}🔧 BG Mode: ${GREEN}${BG_MODE}${NC}"
+    echo -e "${CYAN}🔌 Proxy Mode: ${GREEN}${PROXY_MODE}${NC}"
     echo -e "${CYAN}📡 Tor: ${GREEN}✅ Active${NC}"
     echo ""
     echo -e "${YELLOW}══════════════════════════════════════════${NC}"
@@ -162,13 +171,14 @@ show_menu() {
     echo -e "${YELLOW}[2] Set Country (100+ countries)${NC}"
     echo -e "${YELLOW}[3] Toggle Auto-Start${NC}"
     echo -e "${YELLOW}[4] Toggle BG Mode${NC}"
+    echo -e "${YELLOW}[5] Toggle Proxy Mode (Tor/Privoxy)${NC}"
     echo ""
     echo -e "${YELLOW}══════════════════════════════════════════${NC}"
     echo -e "${YELLOW}  ▶️  CONTROL${NC}"
     echo -e "${YELLOW}══════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}[5] Start IP Changer${NC}"
-    echo -e "${YELLOW}[6] Manual Renew${NC}"
-    echo -e "${YELLOW}[7] Show History${NC}"
+    echo -e "${YELLOW}[6] Start IP Changer${NC}"
+    echo -e "${YELLOW}[7] Manual Renew${NC}"
+    echo -e "${YELLOW}[8] Show History${NC}"
     echo ""
     echo -e "${YELLOW}══════════════════════════════════════════${NC}"
     echo -e "${YELLOW}  ❌  EXIT${NC}"
@@ -225,11 +235,28 @@ toggle_bg_mode() {
     sleep 1
 }
 
+toggle_proxy_mode() {
+    if [ "$PROXY_MODE" = "tor" ]; then
+        PROXY_MODE="privoxy"
+        echo -e "${CYAN}🔌 Starting Privoxy...${NC}"
+        pkill privoxy 2>/dev/null
+        privoxy --user privoxy /data/data/com.termux/files/usr/etc/privoxy/config 2>/dev/null &
+        sleep 2
+    else
+        PROXY_MODE="tor"
+        pkill privoxy 2>/dev/null
+    fi
+    save_config
+    echo -e "${GREEN}✅ Proxy Mode set to: $PROXY_MODE${NC}"
+    sleep 1
+}
+
 start_ip_changer() {
     echo -e "${CYAN}🚀 Starting IP Changer...${NC}"
     echo -e "${CYAN}⏱ Interval: ${INTERVAL}s${NC}"
     echo -e "${CYAN}🌍 Country: ${COUNTRIES[$COUNTRY]:-$COUNTRY}${NC}"
     echo -e "${CYAN}🔧 BG Mode: ${BG_MODE}${NC}"
+    echo -e "${CYAN}🔌 Proxy Mode: ${PROXY_MODE}${NC}"
     echo ""
     
     if [ "$BG_MODE" = "true" ]; then
@@ -268,6 +295,13 @@ show_history() {
 # ============================================================
 load_config
 
+# Start Privoxy if needed
+if [ "$PROXY_MODE" = "privoxy" ]; then
+    pkill privoxy 2>/dev/null
+    privoxy --user privoxy /data/data/com.termux/files/usr/etc/privoxy/config 2>/dev/null &
+    sleep 2
+fi
+
 while true; do
     show_menu
     read -p "👉 Choose: " choice
@@ -276,9 +310,10 @@ while true; do
         2) set_country ;;
         3) toggle_auto_start ;;
         4) toggle_bg_mode ;;
-        5) start_ip_changer ;;
-        6) change_ip ;;
-        7) show_history ;;
+        5) toggle_proxy_mode ;;
+        6) start_ip_changer ;;
+        7) change_ip ;;
+        8) show_history ;;
         q|Q) 
             echo -e "${GREEN}👋 Goodbye!${NC}"
             exit 0
