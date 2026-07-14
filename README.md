@@ -1,22 +1,18 @@
-# 🔄 SURUJ IP Changer v5.1
+# SURUJ IP CHANGER PRO v5.3
 
-## 🦅 EAGLE EYE EDITION
+## Display
+- Tor SOCKS5 proxy: 127.0.0.1:9050
+- Tor control port: 127.0.0.1:9051
+- Privoxy HTTP proxy: 127.0.0.1:8118
 
-**Developer:** SURUJ
+## Files
+- install.sh
+- ip-changer.sh
+- ip-changer.lock
+- ip-changer
+- README.md
 
-### 📌 Features
-- ✅ Set Custom Interval
-- ✅ 100+ Countries
-- ✅ Set Country
-- ✅ Auto-Start
-- ✅ Background Mode
-- ✅ Manual Renew
-- ✅ Show History
-- ✅ Password Lock
-- ✅ SURUJ Logo Banner
-
-### 🚀 Installation
+## Run
 ```bash
-git clone https://github.com/suruj5566/ip-changer.git
-cd ip-changer
 bash install.sh
+ip-changer
