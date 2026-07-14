@@ -109,4 +109,178 @@ change_ip() {
     NEW_IP=$(get_current_ip)
     if [ -n "$NEW_IP" ]; then
         echo -e "${GREEN}✅ New IP: $NEW_IP${NC}"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - $NEW_IP" >> ~/.ip
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - $NEW_IP" >> ~/.ip_history
+        return 0
+    else
+        echo -e "${RED}❌ Failed to get new IP!${NC}"
+        return 1
+    fi
+}
+
+show_banner() {
+    clear
+    echo -e "${PURPLE}"
+    echo '    ╔══════════════════════════════════════════════════════════════╗'
+    echo '    ║                                                              ║'
+    echo '    ║        ███████╗██╗   ██╗██████╗ ██╗   ██╗██╗              ║'
+    echo '    ║        ██╔════╝██║   ██║██╔══██╗██║   ██║██║              ║'
+    echo '    ║        ███████╗██║   ██║██████╔╝██║   ██║██║              ║'
+    echo '    ║        ╚════██║██║   ██║██╔══██╗██║   ██║██║              ║'
+    echo '    ║        ███████║╚██████╔╝██║  ██║╚██████╔╝███████╗         ║'
+    echo '    ║        ╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝         ║'
+    echo '    ║                                                              ║'
+    echo '    ║              🔄 IP CHANGER PRO v5.1                         ║'
+    echo '    ║                   SURUJ EDITION                             ║'
+    echo '    ║                                                              ║'
+    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
+    echo '    ║                 🦅  EAGLE EYE  🦅                           ║'
+    echo '    ║             ✦ ═══════════════════════ ✦                      ║'
+    echo '    ║                                                              ║'
+    echo '    ╚══════════════════════════════════════════════════════════════╝'
+    echo -e "${NC}"
+}
+
+show_menu() {
+    show_banner
+    echo -e "${CYAN}📅 Time: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
+    echo -e "${CYAN}🌐 Current IP: ${GREEN}$(get_current_ip)${NC}"
+    echo -e "${CYAN}⏱ Interval: ${GREEN}${INTERVAL}s${NC}"
+    echo -e "${CYAN}🌍 Country: ${GREEN}${COUNTRIES[$COUNTRY]:-$COUNTRY}${NC}"
+    echo -e "${CYAN}🚀 Auto-Start: ${GREEN}${AUTO_START}${NC}"
+    echo -e "${CYAN}🔧 BG Mode: ${GREEN}${BG_MODE}${NC}"
+    echo -e "${CYAN}📡 Tor: ${GREEN}✅ Active${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  🛠️  SETTINGS${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[1] Set Interval${NC}"
+    echo -e "${YELLOW}[2] Set Country (100+ countries)${NC}"
+    echo -e "${YELLOW}[3] Toggle Auto-Start${NC}"
+    echo -e "${YELLOW}[4] Toggle BG Mode${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  ▶️  CONTROL${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[5] Start IP Changer${NC}"
+    echo -e "${YELLOW}[6] Manual Renew${NC}"
+    echo -e "${YELLOW}[7] Show History${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  ❌  EXIT${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[Q] Quit${NC}"
+    echo ""
+}
+
+set_interval() {
+    read -p "⏱ Enter interval (seconds): " new_interval
+    if [[ "$new_interval" -ge 5 ]]; then
+        INTERVAL=$new_interval
+        save_config
+        echo -e "${GREEN}✅ Interval set to ${INTERVAL}s${NC}"
+    else
+        echo -e "${RED}❌ Minimum 5 seconds!${NC}"
+    fi
+    sleep 1
+}
+
+set_country() {
+    echo -e "${CYAN}🌍 Available countries: 100+${NC}"
+    echo -e "${CYAN}Enter country code (e.g., bd, us, uk, in):${NC}"
+    read -p "👉 Country: " new_country
+    if [ -n "$new_country" ] && [ -n "${COUNTRIES[$new_country]}" ]; then
+        COUNTRY=$new_country
+        save_config
+        echo -e "${GREEN}✅ Country set to: ${COUNTRIES[$COUNTRY]}${NC}"
+    else
+        echo -e "${RED}❌ Invalid country code! Use 'random' or check list.${NC}"
+    fi
+    sleep 1
+}
+
+toggle_auto_start() {
+    if [ "$AUTO_START" = "true" ]; then
+        AUTO_START="false"
+    else
+        AUTO_START="true"
+    fi
+    save_config
+    echo -e "${GREEN}✅ Auto-Start set to: $AUTO_START${NC}"
+    sleep 1
+}
+
+toggle_bg_mode() {
+    if [ "$BG_MODE" = "true" ]; then
+        BG_MODE="false"
+    else
+        BG_MODE="true"
+    fi
+    save_config
+    echo -e "${GREEN}✅ BG Mode set to: $BG_MODE${NC}"
+    sleep 1
+}
+
+start_ip_changer() {
+    echo -e "${CYAN}🚀 Starting IP Changer...${NC}"
+    echo -e "${CYAN}⏱ Interval: ${INTERVAL}s${NC}"
+    echo -e "${CYAN}🌍 Country: ${COUNTRIES[$COUNTRY]:-$COUNTRY}${NC}"
+    echo -e "${CYAN}🔧 BG Mode: ${BG_MODE}${NC}"
+    echo ""
+    
+    if [ "$BG_MODE" = "true" ]; then
+        echo -e "${YELLOW}🔄 Running in background...${NC}"
+        echo -e "${YELLOW}⚠️ To stop: pkill -f ip-changer.sh${NC}"
+        while true; do
+            sleep $INTERVAL
+            change_ip
+            ((CHANGE_COUNT++))
+        done &
+        echo -e "${GREEN}✅ Background mode started!${NC}"
+        sleep 2
+    else
+        echo -e "${YELLOW}🔄 Press Ctrl+C to stop${NC}"
+        CHANGE_COUNT=0
+        while true; do
+            sleep $INTERVAL
+            change_ip
+            ((CHANGE_COUNT++))
+        done
+    fi
+}
+
+show_history() {
+    echo -e "${CYAN}📜 IP History:${NC}"
+    if [ -f ~/.ip_history ]; then
+        tail -10 ~/.ip_history
+    else
+        echo -e "${YELLOW}No history yet.${NC}"
+    fi
+    read -p "Press Enter to continue..."
+}
+
+# ============================================================
+#  MAIN LOOP
+# ============================================================
+load_config
+
+while true; do
+    show_menu
+    read -p "👉 Choose: " choice
+    case $choice in
+        1) set_interval ;;
+        2) set_country ;;
+        3) toggle_auto_start ;;
+        4) toggle_bg_mode ;;
+        5) start_ip_changer ;;
+        6) change_ip ;;
+        7) show_history ;;
+        q|Q) 
+            echo -e "${GREEN}👋 Goodbye!${NC}"
+            exit 0
+            ;;
+        *) 
+            echo -e "${RED}❌ Invalid choice!${NC}"
+            sleep 1
+            ;;
+    esac
+done
