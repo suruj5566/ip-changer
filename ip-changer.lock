@@ -1,9 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# ============================================================
-#  SURUJ IP CHANGER - LOCKED VERSION
-# ============================================================
-
 REAL_PASS="SURUJ@2026"
 MAX_ATTEMPTS=3
 
@@ -28,5 +24,4 @@ if [ $attempt -ge $MAX_ATTEMPTS ]; then
     exit 1
 fi
 
-cd /data/data/com.termux/files/usr/share/ip-changer
-bash ip-changer.sh "$@"
+bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
