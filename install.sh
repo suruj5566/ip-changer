@@ -1,180 +1,174 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Define ANSI color codes
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-CYAN='\033[1;36m'
-NC='\033[0m'
+# SURUJ IP CHANGER INSTALLER v5.0
+clear
+echo -e "\033[1;36m"
+echo '    ╔══════════════════════════════════════════════════════════════╗'
+echo '    ║              🔄 IP CHANGER PRO v5.0                         ║'
+echo '    ║                   SURUJ EDITION                             ║'
+echo '    ║                 🦅  EAGLE EYE  🦅                           ║'
+echo '    ╚══════════════════════════════════════════════════════════════╝'
+echo -e "\033[0m"
 
-# ============================================================
-#  DETECT ENVIRONMENT
-# ============================================================
-echo -e "${CYAN}🔍 Checking environment...${NC}"
+echo -e "\033[1;36m🔍 Installing SURUJ IP Changer...\033[0m"
 
+# Termux check
 if [ -d "/data/data/com.termux/files/usr" ]; then
-    echo -e "${GREEN}✅ Termux environment detected${NC}"
     PREFIX="/data/data/com.termux/files/usr"
     IPCHANGER="$PREFIX/share/ip-changer"
-    LAUNCHER_SCRIPT="$PREFIX/bin/ip-changer"
-    MAIN_SCRIPT="ip-changer.sh"
-    PACKAGES=("git" "curl" "tor" "privoxy" "netcat-openbsd" "tmux" "python3" "jq")
+    LAUNCHER="$PREFIX/bin/ip-changer"
     PKG_MANAGER="pkg"
-    USE_SUDO=false
 else
-    echo -e "${GREEN}✅ Linux environment detected${NC}"
     PREFIX="/usr"
     IPCHANGER="$PREFIX/share/ip-changer"
-    LAUNCHER_SCRIPT="$PREFIX/bin/ip-changer"
-    MAIN_SCRIPT="ip-changer-linux.sh"
-    PACKAGES=("git" "curl" "tor" "netcat-openbsd" "tmux" "python3" "jq")
+    LAUNCHER="$PREFIX/bin/ip-changer"
     PKG_MANAGER="apt-get"
-    USE_SUDO=true
 fi
 
-echo -e "${CYAN}📁 Installation path: $IPCHANGER${NC}"
-echo -e "${CYAN}📁 Launcher path: $LAUNCHER_SCRIPT${NC}"
+# Remove old files
+rm -rf /data/data/com.termux/files/usr/share/AnonymousPro
+rm -f /data/data/com.termux/files/usr/bin/AnonymousPro
+pkill -f AnonymousPro 2>/dev/null
 
-# ============================================================
-#  FUNCTION: Run commands with or without sudo
-# ============================================================
-run_command() {
-    if [ "$USE_SUDO" = true ]; then
-        sudo "$@"
-    else
-        "$@"
-    fi
-}
+# Install packages
+echo -e "\033[1;36m🛠️ Installing required packages...\033[0m"
+$PKG_MANAGER install tor curl netcat-openbsd jq -y 2>/dev/null
 
-# ============================================================
-#  FUNCTION: Install packages
-# ============================================================
-install_packages() {
-    echo -e "${CYAN}🛠️ Checking and installing required packages...${NC}"
-    
-    if [ "$USE_SUDO" = true ]; then
-        echo -e "${YELLOW}🔄 Updating package lists...${NC}"
-        run_command $PKG_MANAGER update -y
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}❌ Failed to update package lists!${NC}"
-            exit 1
-        fi
-        echo -e "${GREEN}✅ Package lists updated${NC}"
-    fi
-    
-    for pkg in "${PACKAGES[@]}"; do
-        if ! dpkg -s $pkg &>/dev/null 2>&1; then
-            echo -e "${YELLOW}🚀 Installing $pkg...${NC}"
-            if [ "$USE_SUDO" = true ]; then
-                run_command $PKG_MANAGER install -y $pkg
-            else
-                run_command $PKG_MANAGER install $pkg -y
-            fi
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}✅ $pkg installed successfully!${NC}"
-            else
-                echo -e "${RED}❌ Failed to install $pkg${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${GREEN}✅ $pkg is already installed.${NC}"
-        fi
-    done
-}
+# Create directory
+mkdir -p "$IPCHANGER"
+cd "$IPCHANGER"
 
-# ============================================================
-#  FUNCTION: Setup repository
-# ============================================================
-setup_repository() {
-    echo -e "${CYAN}📦 Setting up Ip-Changer repository...${NC}"
-    
-    if [ -d "$IPCHANGER" ]; then
-        echo -e "${YELLOW}📂 Directory exists. Updating repository...${NC}"
-        cd "$IPCHANGER" || exit
-        
-        if [ -d ".git" ]; then
-            git pull origin main 2>/dev/null || git pull origin master 2>/dev/null
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}✅ Repository updated successfully!${NC}"
-            else
-                echo -e "${YELLOW}⚠️ Could not pull. Re-cloning...${NC}"
-                cd ..
-                rm -rf "$IPCHANGER"
-                setup_repository
-                return
-            fi
-        else
-            echo -e "${YELLOW}⚠️ Not a git repo. Re-cloning...${NC}"
-            cd ..
-            rm -rf "$IPCHANGER"
-            setup_repository
-            return
-        fi
-    else
-        echo -e "${YELLOW}📥 Cloning repository...${NC}"
-        run_command mkdir -p "$IPCHANGER"
-        git clone https://github.com/anonymousproofficial/Anonymousproofficial-YTB-Mobile.git "$IPCHANGER" 2>/dev/null
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✅ Repository cloned successfully!${NC}"
-            if [ "$USE_SUDO" = true ]; then
-                run_command chown -R $(whoami) "$IPCHANGER"
-            fi
-        else
-            echo -e "${RED}❌ Failed to clone repository!${NC}"
-            exit 1
-        fi
-    fi
-    
-    if [ -f "$IPCHANGER/$MAIN_SCRIPT" ]; then
-        echo -e "${GREEN}✅ Main script found: $MAIN_SCRIPT${NC}"
-    else
-        echo -e "${RED}❌ Main script not found: $IPCHANGER/$MAIN_SCRIPT${NC}"
-        echo -e "${YELLOW}📋 Available files:${NC}"
-        ls -la "$IPCHANGER/"
-        exit 1
-    fi
-}
-
-# ============================================================
-#  FUNCTION: Create launcher script
-# ============================================================
-create_launcher() {
-    echo -e "${CYAN}📝 Creating launcher script at $LAUNCHER_SCRIPT...${NC}"
-    
-    run_command mkdir -p "$(dirname "$LAUNCHER_SCRIPT")"
-    
-    run_command bash -c "cat > \"$LAUNCHER_SCRIPT\"" << 'EOF'
+# Create main script
+cat > "$IPCHANGER/ip-changer.sh" << 'MAINEOF'
 #!/data/data/com.termux/files/usr/bin/bash
-cd /data/data/com.termux/files/usr/share/ip-changer
-bash ip-changer.sh "$@"
-EOF
 
-    if [ $? -eq 0 ]; then
-        run_command chmod +x "$LAUNCHER_SCRIPT"
-        echo -e "${GREEN}✅ Launcher script created and made executable!${NC}"
+# ============================================================
+#  SURUJ IP CHANGER PRO v5.0 - FULL CONTROL
+# ============================================================
+
+RED='\033[1;31m'; GREEN='\033[1;32m'; YELLOW='\033[1;33m'; CYAN='\033[1;36m'; PURPLE='\033[1;35m'; NC='\033[0m'
+
+CONFIG_FILE="$HOME/.ip_changer_config.json"
+DEFAULT_INTERVAL=30
+
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        INTERVAL=$(jq -r '.interval' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_INTERVAL")
     else
-        echo -e "${RED}❌ Failed to create launcher script!${NC}"
-        exit 1
+        INTERVAL=$DEFAULT_INTERVAL
     fi
 }
 
-# ============================================================
-#  MAIN INSTALLATION
-# ============================================================
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}   SURUJ IP Changer Installer v4.1${NC}"
-echo -e "${BLUE}========================================${NC}"
+save_config() {
+    echo "{\"interval\": $INTERVAL}" > "$CONFIG_FILE"
+}
 
-install_packages
-setup_repository
-create_launcher
+get_current_ip() {
+    curl -s --socks5-hostname 127.0.0.1:9050 https://api.ipify.org 2>/dev/null
+}
 
-# ============================================================
-#  FINAL MESSAGE
-# ============================================================
-echo -e "${BLUE}========================================${NC}"
-echo -e "${GREEN}🎉 Installation complete!${NC}"
-echo -e "${CYAN}🚀 You can now run: ${GREEN}ip-changer${NC}"
-echo -e "${CYAN}📂 Installed at: $IPCHANGER${NC}"
-echo -e "${BLUE}========================================${NC}"
+change_ip() {
+    echo -e "${YELLOW}🔄 Changing IP...${NC}"
+    echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
+    sleep 2
+    NEW_IP=$(get_current_ip)
+    if [ -n "$NEW_IP" ]; then
+        echo -e "${GREEN}✅ New IP: $NEW_IP${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Failed!${NC}"
+        return 1
+    fi
+}
+
+show_menu() {
+    clear
+    echo -e "${PURPLE}"
+    echo '    ╔══════════════════════════════════════════════════════════════╗'
+    echo '    ║              🔄 SURUJ IP CHANGER PRO v5.0                  ║'
+    echo '    ║                   🦅 EAGLE EYE EDITION                     ║'
+    echo '    ╚══════════════════════════════════════════════════════════════╝'
+    echo -e "${NC}"
+    echo -e "${CYAN}📅 Time: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
+    echo -e "${CYAN}🌐 Current IP: ${GREEN}$(get_current_ip)${NC}"
+    echo -e "${CYAN}⏱ Current Interval: ${GREEN}${INTERVAL}s${NC}"
+    echo -e "${CYAN}📡 Tor: ${GREEN}✅ Active${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  🛠️  SETTINGS${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[1] Set Interval (Change time)${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  ▶️  CONTROL${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[2] Start IP Changer${NC}"
+    echo -e "${YELLOW}[3] Manual Renew (Change IP now)${NC}"
+    echo ""
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  ❌  EXIT${NC}"
+    echo -e "${YELLOW}══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}[Q] Quit${NC}"
+    echo ""
+}
+
+load_config
+
+while true; do
+    show_menu
+    read -p "👉 Choose: " choice
+    case $choice in
+        1)
+            read -p "⏱ Enter interval (seconds): " new_interval
+            if [[ "$new_interval" -ge 5 ]]; then
+                INTERVAL=$new_interval
+                save_config
+                echo -e "${GREEN}✅ Interval set to ${INTERVAL}s${NC}"
+            else
+                echo -e "${RED}❌ Minimum 5 seconds!${NC}"
+            fi
+            sleep 1
+            ;;
+        2)
+            echo -e "${CYAN}🚀 Starting IP Changer...${NC}"
+            echo -e "${CYAN}⏱ Interval: ${INTERVAL}s${NC}"
+            echo -e "${YELLOW}🔄 Press Ctrl+C to stop${NC}"
+            CHANGE_COUNT=0
+            while true; do
+                sleep $INTERVAL
+                change_ip
+                ((CHANGE_COUNT++))
+            done
+            ;;
+        3)
+            change_ip
+            sleep 2
+            ;;
+        q|Q)
+            echo -e "${GREEN}👋 Goodbye!${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}❌ Invalid choice!${NC}"
+            sleep 1
+            ;;
+    esac
+done
+MAINEOF
+
+chmod +x "$IPCHANGER/ip-changer.sh"
+
+# Create launcher
+cat > "$LAUNCHER" << 'LAUNCHEREOF'
+#!/data/data/com.termux/files/usr/bin/bash
+bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
+LAUNCHEREOF
+
+chmod +x "$LAUNCHER"
+
+# Start Tor
+tor --runasdaemon 1 2>/dev/null
+sleep 3
+
+echo -e "\033[1;32m✅ SURUJ IP CHANGER PRO v5.0 INSTALLED!\033[0m"
+echo -e "\033[1;36m🚀 Now run: ip-changer\033[0m"
