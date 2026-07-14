@@ -16,11 +16,8 @@ DEFAULT_INTERVAL=30
 DEFAULT_COUNTRY="random"
 DEFAULT_AUTO_START="false"
 DEFAULT_BG_MODE="false"
-DEFAULT_PROXY_MODE="tor"  # tor or privoxy
+DEFAULT_PROXY_MODE="tor"
 
-# ============================================================
-#  ১০০+ COUNTRIES
-# ============================================================
 declare -A COUNTRIES=(
     ["random"]="🌍 Random"
     ["af"]="🇦🇫 Afghanistan" ["al"]="🇦🇱 Albania" ["dz"]="🇩🇿 Algeria"
@@ -83,9 +80,6 @@ declare -A COUNTRIES=(
     ["zm"]="🇿🇲 Zambia" ["zw"]="🇿🇼 Zimbabwe"
 )
 
-# ============================================================
-#  FUNCTIONS
-# ============================================================
 load_config() {
     if [ -f "$CONFIG_FILE" ]; then
         INTERVAL=$(jq -r '.interval' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_INTERVAL")
@@ -116,13 +110,7 @@ get_current_ip() {
 
 change_ip() {
     echo -e "${YELLOW}🔄 Changing IP...${NC}"
-    if [ "$PROXY_MODE" = "privoxy" ]; then
-        # Privoxy + Tor
-        echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
-    else
-        # Direct Tor
-        echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
-    fi
+    echo -e "AUTHENTICATE\r\nSIGNAL NEWNYM\r\nQUIT\r\n" | nc -w 2 127.0.0.1 9051 >/dev/null 2>&1
     sleep 2
     NEW_IP=$(get_current_ip)
     if [ -n "$NEW_IP" ]; then
@@ -290,12 +278,8 @@ show_history() {
     read -p "Press Enter to continue..."
 }
 
-# ============================================================
-#  MAIN LOOP
-# ============================================================
 load_config
 
-# Start Privoxy if needed
 if [ "$PROXY_MODE" = "privoxy" ]; then
     pkill privoxy 2>/dev/null
     privoxy --user privoxy /data/data/com.termux/files/usr/etc/privoxy/config 2>/dev/null &
