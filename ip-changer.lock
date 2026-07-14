@@ -1,27 +1,16 @@
-#!/data/data/com.termux/files/usr/bin/bash
-
+#!/usr/bin/env bash
 REAL_PASS="SURUJ@2026"
 MAX_ATTEMPTS=3
-
 attempt=0
+
 while [ $attempt -lt $MAX_ATTEMPTS ]; do
-    echo -e "\033[1;36m🔐 Enter password to unlock IP Changer:\033[0m"
-    read -s user_pass
-    echo ""
-    
-    if [ "$user_pass" == "$REAL_PASS" ]; then
-        echo -e "\033[1;32m✅ Access granted! Loading IP Changer...\033[0m"
-        break
-    else
-        attempt=$((attempt + 1))
-        left=$((MAX_ATTEMPTS - attempt))
-        echo -e "\033[1;31m❌ Wrong password! $left attempts left.\033[0m"
+    read -r -s -p "Enter password to unlock IP Changer: " user_pass
+    echo
+    if [ "$user_pass" = "$REAL_PASS" ]; then
+        exec "$(dirname "$0")/ip-changer.sh" "$@"
     fi
+    attempt=$((attempt + 1))
+    echo "Wrong password. Attempts left: $((MAX_ATTEMPTS - attempt))"
 done
 
-if [ $attempt -ge $MAX_ATTEMPTS ]; then
-    echo -e "\033[1;31m🔒 Too many failed attempts! Exiting...\033[0m"
-    exit 1
-fi
-
-bash /data/data/com.termux/files/usr/share/ip-changer/ip-changer.sh "$@"
+exit 1
